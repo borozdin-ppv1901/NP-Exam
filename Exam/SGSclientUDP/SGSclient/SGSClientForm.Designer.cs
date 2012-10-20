@@ -32,15 +32,14 @@ namespace SGSclient
             this.txtChatBox = new System.Windows.Forms.TextBox();
             this.txtMessage = new System.Windows.Forms.TextBox();
             this.lstChatters = new System.Windows.Forms.ListBox();
-            this.textBoxY = new System.Windows.Forms.TextBox();
-            this.textBoxX = new System.Windows.Forms.TextBox();
-            this.butSendXY = new System.Windows.Forms.Button();
+            this.butSelectColor = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnSend
             // 
             this.btnSend.Enabled = false;
-            this.btnSend.Location = new System.Drawing.Point(300, 270);
+            this.btnSend.Location = new System.Drawing.Point(300, 192);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(75, 21);
             this.btnSend.TabIndex = 0;
@@ -51,17 +50,17 @@ namespace SGSclient
             // txtChatBox
             // 
             this.txtChatBox.BackColor = System.Drawing.SystemColors.Window;
-            this.txtChatBox.Location = new System.Drawing.Point(12, 12);
+            this.txtChatBox.Location = new System.Drawing.Point(244, 12);
             this.txtChatBox.Multiline = true;
             this.txtChatBox.Name = "txtChatBox";
             this.txtChatBox.ReadOnly = true;
             this.txtChatBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtChatBox.Size = new System.Drawing.Size(363, 252);
+            this.txtChatBox.Size = new System.Drawing.Size(239, 174);
             this.txtChatBox.TabIndex = 2;
             // 
             // txtMessage
             // 
-            this.txtMessage.Location = new System.Drawing.Point(12, 270);
+            this.txtMessage.Location = new System.Drawing.Point(12, 192);
             this.txtMessage.Name = "txtMessage";
             this.txtMessage.Size = new System.Drawing.Size(282, 20);
             this.txtMessage.TabIndex = 3;
@@ -71,43 +70,37 @@ namespace SGSclient
             // lstChatters
             // 
             this.lstChatters.FormattingEnabled = true;
-            this.lstChatters.Location = new System.Drawing.Point(382, 14);
+            this.lstChatters.Location = new System.Drawing.Point(489, 14);
             this.lstChatters.Name = "lstChatters";
-            this.lstChatters.Size = new System.Drawing.Size(103, 277);
+            this.lstChatters.Size = new System.Drawing.Size(117, 186);
             this.lstChatters.TabIndex = 4;
             // 
-            // textBoxY
+            // butSelectColor
             // 
-            this.textBoxY.Location = new System.Drawing.Point(81, 297);
-            this.textBoxY.Name = "textBoxY";
-            this.textBoxY.Size = new System.Drawing.Size(58, 20);
-            this.textBoxY.TabIndex = 5;
+            this.butSelectColor.Location = new System.Drawing.Point(390, 189);
+            this.butSelectColor.Name = "butSelectColor";
+            this.butSelectColor.Size = new System.Drawing.Size(93, 23);
+            this.butSelectColor.TabIndex = 8;
+            this.butSelectColor.Text = "Select Color";
+            this.butSelectColor.UseVisualStyleBackColor = true;
+            this.butSelectColor.Click += new System.EventHandler(this.butSelectColor_Click);
             // 
-            // textBoxX
+            // label1
             // 
-            this.textBoxX.Location = new System.Drawing.Point(12, 296);
-            this.textBoxX.Name = "textBoxX";
-            this.textBoxX.Size = new System.Drawing.Size(63, 20);
-            this.textBoxX.TabIndex = 6;
-            // 
-            // butSendXY
-            // 
-            this.butSendXY.Location = new System.Drawing.Point(145, 296);
-            this.butSendXY.Name = "butSendXY";
-            this.butSendXY.Size = new System.Drawing.Size(75, 21);
-            this.butSendXY.TabIndex = 7;
-            this.butSendXY.Text = "&Send";
-            this.butSendXY.UseVisualStyleBackColor = true;
-            this.butSendXY.Click += new System.EventHandler(this.butSendXY_Click);
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(507, 203);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(35, 13);
+            this.label1.TabIndex = 9;
+            this.label1.Text = "label1";
             // 
             // SGSClient
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(505, 394);
-            this.Controls.Add(this.butSendXY);
-            this.Controls.Add(this.textBoxX);
-            this.Controls.Add(this.textBoxY);
+            this.ClientSize = new System.Drawing.Size(617, 221);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.butSelectColor);
             this.Controls.Add(this.lstChatters);
             this.Controls.Add(this.txtMessage);
             this.Controls.Add(this.txtChatBox);
@@ -118,6 +111,8 @@ namespace SGSclient
             this.Text = "SGSClientUDP";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.SGSClient_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.Form1_Paint);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.SGSClient_KeyDown);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -129,9 +124,8 @@ namespace SGSclient
         private System.Windows.Forms.TextBox txtChatBox;
         private System.Windows.Forms.TextBox txtMessage;
         private System.Windows.Forms.ListBox lstChatters;
-        private System.Windows.Forms.TextBox textBoxY;
-        private System.Windows.Forms.TextBox textBoxX;
-        private System.Windows.Forms.Button butSendXY;
+        private System.Windows.Forms.Button butSelectColor;
+        private System.Windows.Forms.Label label1;
     }
 }
 

@@ -1,3 +1,9 @@
+/* Баги: При выходе игрока сбрасываются цвета других
+ *       При выходе игрока больше никто не может подключиться на сервак 
+ *       Передача сообщений обрезается
+ * 
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Collections;
@@ -15,6 +21,30 @@ using System.Net.Sockets;
 namespace Server
 {
     //The commands for interaction between the server and the client
+    class Player
+    {
+        public Point position;
+        public Color color;
+        public string name;
+        public Player(Point pos, Color col, string n)
+        {
+            position = pos;
+            color = col;
+            name = n;
+        }
+        public Player()
+        {
+            position = new Point(10, 10);
+            color = Color.DarkGray;
+        }
+        public Player(string n)
+        {
+            position = new Point(10, 10);
+            color = Color.DarkGray;
+            name = n;
+        }
+    }
+    
     enum Command
     {
         Login,      //Log into the server
@@ -24,6 +54,7 @@ namespace Server
         List,       //Get a list of users in the chat room from the server
         Null        //No command
     }
+
 
     public partial class SGSserverForm : Form
     {
@@ -42,17 +73,18 @@ namespace Server
         Socket serverSocket;
 
         byte[] byteData = new byte[1024];
-        List<Point> points = new List<Point>();
-        Bitmap bmp;
-        Graphics bmpG;
-        
+        //Bitmap bmp;
+        //Graphics bmpG;
+
+        List<Player> players = new List<Player>();
+
         public SGSserverForm()
         {
             clientList = new ArrayList();
             InitializeComponent();
-            bmp = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
-            bmpG = Graphics.FromImage(bmp);
-            bmpG.Clear(Color.White);
+            //bmp = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+            //bmpG = Graphics.FromImage(bmp);
+            //bmpG.Clear(Color.White);  
         }
 
     private void Form1_Load(object sender, EventArgs e)
@@ -88,13 +120,53 @@ namespace Server
 
     private void Form1_Paint(object sender, PaintEventArgs e)
     {
-        e.Graphics.DrawImage(bmp, 0, 0);
+        //e.Graphics.Clear(Color.White);
+        //e.Graphics.DrawImage(bmp, 0, 0);
+        foreach (Player p in players)
+        {
+            e.Graphics.FillEllipse(new SolidBrush(p.color), p.position.X - 5, p.position.Y - 5, 10, 10);
+            //e.Graphics.Clear(Color.White);
+            //e.Graphics.DrawImage(bmp, 0, 0);
+        }
     }
 
-    private void Show_Dot(string X, string Y)
+    private int GetUser(string userName)
     {
-        bmpG.DrawEllipse(Pens.Aqua, int.Parse(X)+200, int.Parse(Y), 20, 20);
-        Invalidate();
+        int pos = 0;
+        try
+        {
+            foreach (ClientInfo cl in clientList)
+            {
+                if (cl.strName == userName)
+                    return pos;
+                pos++;
+            }
+        }
+        catch { MessageBox.Show("Клиента нет на сервере"); }
+        return -1;
+    }
+
+    private void Left_Game(string userName)
+    {
+//        bmpG.Clear(Color.White);
+//        points.RemoveAt(GetUser(userName));
+//        for (int i = 0; i < points.Count; i++)
+// /       {
+//            bmpG.DrawEllipse(new Pen(Color.Blue, 7), points[i].X, points[i].Y, 10, 10);
+//        }
+//        Invalidate();
+    }
+
+    private void Show_Dot()
+    {
+                
+  //      bmpG.Clear(Color.White);
+  //      for(int i=0; i<points.Count;i++)
+  //      {
+ //           bmpG.DrawEllipse(new Pen(pointsColor[i],7), points[i].X, points[i].Y, 10, 10);          
+ //       }
+ //       Invalidate();
+
     }
         private void OnReceive(IAsyncResult ar)
         {
@@ -134,7 +206,10 @@ namespace Server
                         clientList.Add(clientInfo);
                         
                         //Set the text of the message that we will broadcast to all users
-                        msgToSend.strMessage = "<<<" + msgReceived.strName + " has joined the room>>>";   
+                        msgToSend.strMessage = "<<<" + msgReceived.strName + " has joined the room>>>";
+                        players.Add(new Player(new Point(10, 10), Color.DarkGray, msgReceived.strName));
+                        //Show_Dot();
+                        //Invalidate();
                         break;
 
                     case Command.Logout:                    
@@ -154,6 +229,7 @@ namespace Server
                         }                                               
                         
                         msgToSend.strMessage = "<<<" + msgReceived.strName + " has left the room>>>";
+                        //Left_Game(msgReceived.strName);                                                   // Нужна ли эта функция??
                         break;
 
                     case Command.Message:
@@ -167,8 +243,14 @@ namespace Server
 
                         // Draw Player Coordinat on the screen
                         string[] getPoints = msgReceived.strMessage.Split(' ');
-                        Show_Dot(getPoints[0], getPoints[1]);
-                        msgToSend.strMessage = msgReceived.strName + ": Ходит фишкой";
+                        int userPosition = GetUser(msgReceived.strName);
+
+                            players[userPosition].position=new Point(int.Parse(getPoints[0]), int.Parse(getPoints[1]));
+                            players[userPosition].color = Color.FromName(getPoints[3].Replace("[", "").Replace("]", ""));
+          
+                        //Show_Dot();
+                        msgToSend.strMessage = msgReceived.strName + ": " + getPoints[0].ToString() +" "+ getPoints[1].ToString()+" "+getPoints[3] +" Мусор";
+                        Invalidate();
                         break;
 
                     case Command.List:
@@ -308,6 +390,7 @@ namespace Server
 
         public string strName;      //Name by which the client logs into the room
         public string strMessage;   //Message text
+        public Color strColor;
         public Command cmdCommand;  //Command type (login, logout, send message, etcetera)
     }
 }

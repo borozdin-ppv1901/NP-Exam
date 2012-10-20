@@ -35,7 +35,7 @@ namespace SGSclient
 
                 //IP address of the server machine
                 IPAddress ipAddress = IPAddress.Parse(txtServerIP.Text);
-                ipAddress = IPAddress.Loopback;
+                //ipAddress = IPAddress.Loopback;
                 //Server is listening on port 1000
                 IPEndPoint ipEndPoint = new IPEndPoint(ipAddress, 1000);
 

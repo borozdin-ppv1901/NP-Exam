@@ -20,7 +20,7 @@ namespace SGSclient
             Application.Run(loginForm);
             if (loginForm.DialogResult == DialogResult.OK)
             {
-                SGSClient sgsClientForm = new SGSClient();
+                SGSClient sgsClientForm = new SGSClient(loginForm.strName, loginForm.epServer);
                 sgsClientForm.clientSocket = loginForm.clientSocket;
                 sgsClientForm.strName = loginForm.strName;
                 sgsClientForm.epServer = loginForm.epServer;

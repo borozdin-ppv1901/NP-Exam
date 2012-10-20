@@ -34,19 +34,19 @@ namespace Server
             // txtLog
             // 
             this.txtLog.BackColor = System.Drawing.SystemColors.Window;
-            this.txtLog.Location = new System.Drawing.Point(13, 12);
+            this.txtLog.Location = new System.Drawing.Point(212, 1);
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtLog.Size = new System.Drawing.Size(267, 242);
+            this.txtLog.Size = new System.Drawing.Size(240, 203);
             this.txtLog.TabIndex = 0;
             // 
             // SGSserverForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(585, 266);
+            this.ClientSize = new System.Drawing.Size(454, 204);
             this.Controls.Add(this.txtLog);
             this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -56,9 +56,10 @@ namespace Server
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "SGSserverUDP";
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.Form1_Paint);
             this.ResumeLayout(false);
             this.PerformLayout();
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.Form1_Paint);
+
         }
 
         #endregion
