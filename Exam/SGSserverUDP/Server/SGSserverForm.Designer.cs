@@ -28,7 +28,9 @@ namespace Server
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.txtLog = new System.Windows.Forms.TextBox();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // txtLog
@@ -41,6 +43,11 @@ namespace Server
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtLog.Size = new System.Drawing.Size(240, 203);
             this.txtLog.TabIndex = 0;
+            // 
+            // timer1
+            // 
+            this.timer1.Interval = 20;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // SGSserverForm
             // 
@@ -56,7 +63,6 @@ namespace Server
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "SGSserverUDP";
             this.Load += new System.EventHandler(this.Form1_Load);
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.Form1_Paint);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -65,6 +71,7 @@ namespace Server
         #endregion
 
         private System.Windows.Forms.TextBox txtLog;
+        private System.Windows.Forms.Timer timer1;
 
     }
 }

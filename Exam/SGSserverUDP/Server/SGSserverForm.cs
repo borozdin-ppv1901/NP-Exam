@@ -20,30 +20,7 @@ using System.Net.Sockets;
 
 namespace Server
 {
-    //The commands for interaction between the server and the client
-    class Player
-    {
-        public Point position;
-        public Color color;
-        public string name;
-        public Player(Point pos, Color col, string n)
-        {
-            position = pos;
-            color = col;
-            name = n;
-        }
-        public Player()
-        {
-            position = new Point(10, 10);
-            color = Color.DarkGray;
-        }
-        public Player(string n)
-        {
-            position = new Point(10, 10);
-            color = Color.DarkGray;
-            name = n;
-        }
-    }
+
     
     enum Command
     {
@@ -73,10 +50,12 @@ namespace Server
         Socket serverSocket;
 
         byte[] byteData = new byte[1024];
-        //Bitmap bmp;
-        //Graphics bmpG;
+
 
         List<Player> players = new List<Player>();
+        bool _isUserConnect = false;
+        bool _isMove = false;
+        Color color;
 
         public SGSserverForm()
         {
@@ -118,18 +97,6 @@ namespace Server
         }            
     }
 
-    private void Form1_Paint(object sender, PaintEventArgs e)
-    {
-        //e.Graphics.Clear(Color.White);
-        //e.Graphics.DrawImage(bmp, 0, 0);
-        foreach (Player p in players)
-        {
-            e.Graphics.FillEllipse(new SolidBrush(p.color), p.position.X - 5, p.position.Y - 5, 10, 10);
-            //e.Graphics.Clear(Color.White);
-            //e.Graphics.DrawImage(bmp, 0, 0);
-        }
-    }
-
     private int GetUser(string userName)
     {
         int pos = 0;
@@ -148,163 +115,176 @@ namespace Server
 
     private void Left_Game(string userName)
     {
-//        bmpG.Clear(Color.White);
-//        points.RemoveAt(GetUser(userName));
-//        for (int i = 0; i < points.Count; i++)
-// /       {
-//            bmpG.DrawEllipse(new Pen(Color.Blue, 7), points[i].X, points[i].Y, 10, 10);
-//        }
-//        Invalidate();
+        players.RemoveAt(GetUser(userName));
+        _isMove = true;
     }
 
-    private void Show_Dot()
-    {
-                
-  //      bmpG.Clear(Color.White);
-  //      for(int i=0; i<points.Count;i++)
-  //      {
- //           bmpG.DrawEllipse(new Pen(pointsColor[i],7), points[i].X, points[i].Y, 10, 10);          
- //       }
- //       Invalidate();
-
-    }
         private void OnReceive(IAsyncResult ar)
         {
-            try
-            {
-                IPEndPoint ipeSender = new IPEndPoint(IPAddress.Any, 0);
-                EndPoint epSender = (EndPoint)ipeSender;
-
-                serverSocket.EndReceiveFrom (ar, ref epSender);
-                
-                //Transform the array of bytes received from the user into an
-                //intelligent form of object Data
-                Data msgReceived = new Data(byteData);
-                
-                
-                //We will send this object in response the users request
-                Data msgToSend = new Data();
-
-                byte [] message;
-                
-                //If the message is to login, logout, or simple text message
-                //then when send to others the type of the message remains the same
-                msgToSend.cmdCommand = msgReceived.cmdCommand;
-                msgToSend.strName = msgReceived.strName;
-
-                switch (msgReceived.cmdCommand)
+                try
                 {
-                    case Command.Login:
-                        
-                        //When a user logs in to the server then we add her to our
-                        //list of clients
+                    IPEndPoint ipeSender = new IPEndPoint(IPAddress.Any, 0);
+                    EndPoint epSender = (EndPoint)ipeSender;
 
-                        ClientInfo clientInfo = new ClientInfo();
-                        clientInfo.endpoint = epSender;      
-                        clientInfo.strName = msgReceived.strName;                        
+                    serverSocket.EndReceiveFrom(ar, ref epSender);
 
-                        clientList.Add(clientInfo);
-                        
-                        //Set the text of the message that we will broadcast to all users
-                        msgToSend.strMessage = "<<<" + msgReceived.strName + " has joined the room>>>";
-                        players.Add(new Player(new Point(10, 10), Color.DarkGray, msgReceived.strName));
-                        //Show_Dot();
-                        //Invalidate();
-                        break;
+                    //Transform the array of bytes received from the user into an
+                    //intelligent form of object Data
+                    Data msgReceived = new Data(byteData);
 
-                    case Command.Logout:                    
-                        
-                        //When a user wants to log out of the server then we search for her 
-                        //in the list of clients and close the corresponding connection
 
-                        int nIndex = 0;
-                        foreach (ClientInfo client in clientList)
-                        {
-                            if (client.endpoint == epSender)
+                    //We will send this object in response the users request
+                    Data msgToSend = new Data();
+
+                    byte[] message;
+
+                    //If the message is to login, logout, or simple text message
+                    //then when send to others the type of the message remains the same
+                    msgToSend.cmdCommand = msgReceived.cmdCommand;
+                    msgToSend.strName = msgReceived.strName;
+
+                    switch (msgReceived.cmdCommand)
+                    {
+                        case Command.Login:
+
+                            //When a user logs in to the server then we add her to our
+                            //list of clients
+
+                            ClientInfo clientInfo = new ClientInfo();
+                            clientInfo.endpoint = epSender;
+                            clientInfo.strName = msgReceived.strName;
+
+                            clientList.Add(clientInfo);
+
+                            //Set the text of the message that we will broadcast to all users
+                            msgToSend.strMessage = "<<<" + msgReceived.strName + " has joined the room>>>";
+                            players.Add(new Player(new Point(10, 10), Color.DarkGray, msgReceived.strName));
+                            _isMove = true;
+                            //Invalidate();
+                            break;
+
+                        case Command.Logout:
+
+                            //When a user wants to log out of the server then we search for her 
+                            //in the list of clients and close the corresponding connection
+
+                            int nIndex = 0;
+                            foreach (ClientInfo client in clientList)
                             {
-                                clientList.RemoveAt(nIndex);
-                                break;
+                                if (client.endpoint.ToString() == epSender.ToString())
+                                {
+                                    clientList.RemoveAt(nIndex);
+                                    players.RemoveAt(nIndex);
+                                    break;
+                                }
+                                ++nIndex;
                             }
-                            ++nIndex;
-                        }                                               
-                        
-                        msgToSend.strMessage = "<<<" + msgReceived.strName + " has left the room>>>";
-                        //Left_Game(msgReceived.strName);                                                   // Нужна ли эта функция??
-                        break;
 
-                    case Command.Message:
+                            msgToSend.strMessage = "<<<" + msgReceived.strName + " has left the room>>>";
+                            //Left_Game(msgReceived.strName);                                                   // Нужна ли эта функция??
+                            break;
 
-                        //Set the text of the message that we will broadcast to all users
+                        case Command.Message:
+
+                            //Set the text of the message that we will broadcast to all users
 
                             msgToSend.strMessage = msgReceived.strName + ": " + msgReceived.strMessage;
-                        break;
+                            break;
 
-                    case Command.Draw:
+                        case Command.Draw:
+                            if (!_isUserConnect)
+                            {
+                                _isUserConnect=true;
+                                // Draw Player Coordinat on the screen
 
-                        // Draw Player Coordinat on the screen
-                        string[] getPoints = msgReceived.strMessage.Split(' ');
-                        int userPosition = GetUser(msgReceived.strName);
+                                switch (msgReceived.byteColor)
+                                {
+                                    case 0: color = Color.Red;
+                                        break;
+                                    case 1: color = Color.Yellow;
+                                        break;
+                                    case 2: color = Color.Green;
+                                        break;
+                                    case 3: color = Color.Blue;
+                                        break;
+                                    case 4: color = Color.Magenta;
+                                        break;
+                                }
+                                int userPosition = GetUser(msgReceived.strName);
 
-                            players[userPosition].position=new Point(int.Parse(getPoints[0]), int.Parse(getPoints[1]));
-                            players[userPosition].color = Color.FromName(getPoints[3].Replace("[", "").Replace("]", ""));
-          
-                        //Show_Dot();
-                        msgToSend.strMessage = msgReceived.strName + ": " + getPoints[0].ToString() +" "+ getPoints[1].ToString()+" "+getPoints[3] +" Мусор";
-                        Invalidate();
-                        break;
+                                players[userPosition].position = new Point(msgReceived.posX,msgReceived.posY);
+                                players[userPosition].color = color;
 
-                    case Command.List:
+                                msgToSend.posX = Convert.ToByte(players[userPosition].position.X);
+                                msgToSend.posY = Convert.ToByte(players[userPosition].position.Y);
+                                msgToSend.byteColor = msgReceived.byteColor;
 
-                        //Send the names of all users in the chat room to the new user
-                        msgToSend.cmdCommand = Command.List;
-                        msgToSend.strName = null;
-                        msgToSend.strMessage = null;
+                                //msgToSend.strMessage = msgReceived.strName + ": " + getPoints[0].ToString() + " " + getPoints[1].ToString() + " " + getPoints[3];
+                                _isUserConnect=false;
+                                _isMove = true;
+                            }
+                            break;
 
-                        //Collect the names of the user in the chat room
-                        foreach (ClientInfo client in clientList)
-                        {
-                            //To keep things simple we use asterisk as the marker to separate the user names
-                            msgToSend.strMessage += client.strName + "*";   
-                        }                        
+                        case Command.List:
 
-                        message = msgToSend.ToByte();
+                            //Send the names of all users in the chat room to the new user
+                            msgToSend.cmdCommand = Command.List;
+                            msgToSend.strName = null;
+                            msgToSend.strMessage = null;
 
-                        //Send the name of the users in the chat room
-                        serverSocket.BeginSendTo (message, 0, message.Length, SocketFlags.None, epSender, 
-                                new AsyncCallback(OnSend), epSender);                        
-                        break;
-                }
+                            //Collect the names of the user in the chat room
+                            foreach (ClientInfo client in clientList)
+                            {
+                                //To keep things simple we use asterisk as the marker to separate the user names
+                                msgToSend.strMessage += client.strName + "*";
+                            }
 
-                if (msgToSend.cmdCommand != Command.List)   //List messages are not broadcasted
-                {
-                    message = msgToSend.ToByte();
+                            message = msgToSend.ToByte();
 
-                    foreach (ClientInfo clientInfo in clientList)
-                    {
-                        if (clientInfo.endpoint != epSender ||
-                            msgToSend.cmdCommand != Command.Login)
-                        {
-                            //Send the message to all users
-                            serverSocket.BeginSendTo (message, 0, message.Length, SocketFlags.None, clientInfo.endpoint, 
-                                new AsyncCallback(OnSend), clientInfo.endpoint);                           
-                        }
+                            //Send the name of the users in the chat room
+                            serverSocket.BeginSendTo(message, 0, message.Length, SocketFlags.None, epSender,
+                                    new AsyncCallback(OnSend), epSender);
+                            break;
                     }
 
-                    txtLog.Text += msgToSend.strMessage + "\r\n";
+                    if (msgToSend.cmdCommand != Command.List)   //List messages are not broadcasted
+                    {
+                        message = msgToSend.ToByte();
+
+                        foreach (ClientInfo clientInfo in clientList)
+                        {
+                            if (clientInfo.endpoint.ToString() != epSender.ToString() ||
+                                msgToSend.cmdCommand != Command.Login)
+                            {
+                                //Send the message to all users
+                                serverSocket.BeginSendTo(message, 0, message.Length, SocketFlags.None, clientInfo.endpoint,
+                                    new AsyncCallback(OnSend), clientInfo.endpoint);
+                            }
+                        }
+
+                        if(msgToSend.strMessage!=null)
+                            txtLog.Text += msgToSend.strMessage + "\r\n";
+                    }
+
+                    //If the user is logging out then we need not listen from her
+                    if (msgReceived.cmdCommand != Command.Logout)
+                    {
+                        //Start listening to the message send by the user
+                        serverSocket.BeginReceiveFrom(byteData, 0, byteData.Length, SocketFlags.None, ref epSender,
+                            new AsyncCallback(OnReceive), epSender);
+                    }
+                    if (msgReceived.cmdCommand == Command.Logout)
+                    {
+                        //Start receiving data
+                        serverSocket.BeginReceiveFrom(byteData, 0, byteData.Length,
+                            SocketFlags.None, ref epSender, new AsyncCallback(OnReceive), epSender);
+                    }
                 }
 
-                //If the user is logging out then we need not listen from her
-                if (msgReceived.cmdCommand != Command.Logout)
+                catch (Exception ex)
                 {
-                    //Start listening to the message send by the user
-                    serverSocket.BeginReceiveFrom (byteData, 0, byteData.Length, SocketFlags.None, ref epSender, 
-                        new AsyncCallback(OnReceive), epSender);
+                    MessageBox.Show(ex.Message, "SGSServerUDP", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-            }
-            catch (Exception ex)
-            { 
-                MessageBox.Show(ex.Message, "SGSServerUDP", MessageBoxButtons.OK, MessageBoxIcon.Error); 
-            }
         }
 
         public void OnSend(IAsyncResult ar)
@@ -318,12 +298,22 @@ namespace Server
                 MessageBox.Show(ex.Message, "SGSServerUDP", MessageBoxButtons.OK, MessageBoxIcon.Error); 
             }
         }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (_isMove)
+            {
+                Invalidate();
+                    _isMove=false;
+            }
+        }
     }
 
     //The data structure by which the server and the client interact with 
     //each other
     class Data
     {
+        int msgLen;
         //Default constructor
         public Data()
         {
@@ -335,31 +325,50 @@ namespace Server
         //Converts the bytes into an object of type Data
         public Data(byte[] data)
         {
+            int msgLen = 0;
             //The first four bytes are for the Command
             this.cmdCommand = (Command)BitConverter.ToInt32(data, 0);
 
             //The next four store the length of the name
             int nameLen = BitConverter.ToInt32(data, 4);
 
-            //The next four store the length of the message
-            int msgLen = BitConverter.ToInt32(data, 8);
-
-            //This check makes sure that strName has been passed in the array of bytes
-            if (nameLen > 0)
-                this.strName = Encoding.UTF8.GetString(data, 12, nameLen);
+            if (cmdCommand != Command.Draw)
+            {
+                //The next four store the length of the message
+                msgLen = BitConverter.ToInt32(data, 8);
+                //This check makes sure that strName has been passed in the array of bytes
+                if (nameLen > 0)
+                    this.strName = Encoding.UTF8.GetString(data, 12, nameLen);
+                else
+                    this.strName = null;
+            }
             else
-                this.strName = null;
+            {
+                this.posX = data[8];
+                this.posY = data[9];
+                this.byteColor = data[10];
 
-            //This checks for a null message field
-            if (msgLen > 0)
-                this.strMessage = Encoding.UTF8.GetString(data, 12 + nameLen, msgLen);
-            else
-                this.strMessage = null;
+                if (nameLen > 0)
+                    this.strName = Encoding.UTF8.GetString(data, 11, nameLen);
+                else
+                    this.strName = null;
+            }
+
+            if (cmdCommand != Command.Draw)
+            {
+                //This checks for a null message field
+                if (msgLen > 0)
+                    this.strMessage = Encoding.UTF8.GetString(data, 12 + nameLen, msgLen);
+                else
+                    this.strMessage = null;
+            }
+
         }
 
         //Converts the Data structure into an array of bytes
-        public byte[] ToByte()
+        public byte[] ToByte(bool _isDraw = false)
         {
+
             List<byte> result = new List<byte>();
 
             //First four are for the Command
@@ -371,26 +380,63 @@ namespace Server
             else
                 result.AddRange(BitConverter.GetBytes(0));
 
-            //Length of the message
-            if (strMessage != null)
-                result.AddRange(BitConverter.GetBytes(strMessage.Length));
+            if (cmdCommand != Command.Draw)
+            {
+                //Length of the message
+                if (strMessage != null)
+                    result.AddRange(BitConverter.GetBytes(strMessage.Length));
+                else
+                    result.AddRange(BitConverter.GetBytes(0));
+            }
             else
-                result.AddRange(BitConverter.GetBytes(0));
-
+            {
+                result.Add(posX);
+                result.Add(posY);
+                result.Add(byteColor);
+            }
             //Add the name
             if (strName != null)
-                result.AddRange(Encoding.UTF8.GetBytes(strName));
+            result.AddRange(Encoding.UTF8.GetBytes(strName));
 
-            //And, lastly we add the message text to our array of bytes
-            if (strMessage != null)
-                result.AddRange(Encoding.UTF8.GetBytes(strMessage));
-
+            if (cmdCommand != Command.Draw)
+            {
+                //And, lastly we add the message text to our array of bytes
+                if (strMessage != null)
+                    result.AddRange(Encoding.UTF8.GetBytes(strMessage));
+            }
             return result.ToArray();
         }
 
         public string strName;      //Name by which the client logs into the room
         public string strMessage;   //Message text
-        public Color strColor;
+        public byte posX;
+        public byte posY;
+        public byte byteColor;
         public Command cmdCommand;  //Command type (login, logout, send message, etcetera)
+    }
+
+    //The commands for interaction between the server and the client
+    class Player
+    {
+        public Point position;
+        public Color color;
+        public string name;
+        public Player(Point pos, Color col, string n)
+        {
+            position = pos;
+            color = col;
+            name = n;
+        }
+        public Player()
+        {
+            position = new Point(10, 10);
+            color = Color.DarkGray;
+        }
+        public Player(string n)
+        {
+            position = new Point(10, 10);
+            color = Color.DarkGray;
+            name = n;
+        }
     }
 }

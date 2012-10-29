@@ -1,7 +1,4 @@
 /* Баги:
- *          2 клиента вместе работают ок
- *          при подключении 3-й клиент одна точка не управляем
- *          при подключении 4-го на экране всего 2 точки
  * 
 */
 
@@ -43,6 +40,7 @@ namespace SGSclient
         //Bitmap bmp;
         //Graphics bmpG;
         List<Player> players = new List<Player>();
+        Color color;
 
         public SGSClient(string name, EndPoint elogin)
         {
@@ -50,12 +48,12 @@ namespace SGSclient
             KeyPreview = true;
             epServer = elogin;
 
-          //  bmp = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
-          //  bmpG = Graphics.FromImage(bmp);
-          //  points.Add(new Point(5, 5));
-          //  pointsColor.Add(Color.DarkGray);
           //  Show_Dot();
           players.Add(new Player(name));
+          timer1.Enabled=true;
+          timer1.Start();
+          _isMove = true;
+          comboBox1.SelectedIndex = 0;
           //Invalidate();
           //  label1.Text = players[0].name;
        }
@@ -71,6 +69,8 @@ namespace SGSclient
                 msgToSend.strName = strName;
                 msgToSend.strMessage = txtMessage.Text;
                 msgToSend.cmdCommand = Command.Message;
+
+
 
                 byte[] byteData = msgToSend.ToByte();
 
@@ -92,8 +92,11 @@ namespace SGSclient
             {
                 //Fill the info for the message to be send
                 Data msgToSend = new Data();
-                msgToSend.strName = strName;
-                msgToSend.strMessage = players[0].position.X.ToString() + " " + players[0].position.Y.ToString() + " " + players[0].color.ToString();
+                msgToSend.strName = players[0].name;
+                msgToSend.posX = Convert.ToByte(players[0].position.X);
+                msgToSend.posY = Convert.ToByte(players[0].position.Y);
+                msgToSend.byteColor = Convert.ToByte(comboBox1.SelectedIndex);
+                //msgToSend.strMessage = players[0].position.X.ToString() + " " + players[0].position.Y.ToString() + " " + players[0].color.ToString();
                 msgToSend.cmdCommand = Command.Draw;
 
                 byte[] byteData = msgToSend.ToByte();
@@ -107,24 +110,26 @@ namespace SGSclient
             }
         }
 
-        private void Left_Game(string userName)
-        {
-            //bmpG.Clear(Color.White);
-            //points.RemoveAt(GetUser(userName));
-            //for (int i = 1; i < points.Count; i++)
-            //{
-            //    bmpG.DrawEllipse(new Pen(Color.Blue, 7), points[i].X, points[i].Y, 10, 10);
-            //}
-            //Invalidate();
-        }
-
         private int GetUser(string userName)
         {
+            int pos=-1;
             try
             {
-                return lstChatters.FindString(userName, 0);
+                for(int i=0; i<players.Count; i++)
+                {
+                    if (userName == players[i].name)
+                    {
+                        return i;
+                    }
+                }
             }
-            catch { MessageBox.Show("Клиента нет на сервере"); return -1; }
+
+            //try
+            //{
+            //    return lstChatters.FindString(userName, 0);
+            //}
+            catch { MessageBox.Show("Клиента не подключен к серверу"); return -1; }
+            return -1;
         }
         
         private void OnSend(IAsyncResult ar)
@@ -161,35 +166,42 @@ namespace SGSclient
                         {
                             players.Add(new Player(lstChatters.Items[i].ToString()));
                         }
-                        Invalidate();
+                        //Invalidate();
+                        _isMove = true;
                         break;
 
                     case Command.Logout:
+                        players.RemoveAt(GetUser(msgReceived.strName));
                         lstChatters.Items.Remove(msgReceived.strName);
-                        Left_Game(msgReceived.strName);
+                        
+
+                        _isMove=true;
                         break;
 
                     case Command.Message:
                         break;
 
-                    case Command.Draw:
-                        string[] getPoints = msgReceived.strMessage.Split(' ');
-
-                        //if ((players[0].name+":") != getPoints[0])
-                        //{
-                        for (int i = 0; i < players.Count;i++ )
-                            {                     
-                                if (getPoints[0] == (players[i].name + ":"))
+                        case Command.Draw:
+                            {
+                                switch (msgReceived.byteColor)
                                 {
-                                    players[i].position = new Point(int.Parse(getPoints[1]), int.Parse(getPoints[2]));
-                                    players[i].color = Color.FromName(getPoints[3].Replace("[", "").Replace("]", ""));
-                                    break;
+                                    case 0: color = Color.Red;
+                                        break;
+                                    case 1: color = Color.Yellow;
+                                        break;
+                                    case 2: color = Color.Green;
+                                        break;
+                                    case 3: color = Color.Blue;
+                                        break;
+                                    case 4: color = Color.Magenta;
+                                        break;
                                 }
-                            }
+                                int userPosition = GetUser(msgReceived.strName);
 
-                            
-                       //}
-                       Invalidate();
+                                players[userPosition].position = new Point(msgReceived.posX,msgReceived.posY);
+                                players[userPosition].color = color;
+                                _isMove = true;
+                            }
                         break;
 
                     case Command.List:
@@ -200,7 +212,8 @@ namespace SGSclient
                             players.Add(new Player(lstChatters.Items[masha].ToString()));
                         players.RemoveAt(players.Count - 1);
                         txtChatBox.Text += "<<<" + strName + " has joined the room>>>\r\n";
-                        Invalidate();
+                       // Invalidate();
+                        _isMove = true;
                         break;
                 }
 
@@ -231,6 +244,7 @@ namespace SGSclient
             //the names of all users who are in the chat room
             Data msgToSend = new Data ();
             msgToSend.cmdCommand = Command.List;
+
             msgToSend.strName = strName;
             msgToSend.strMessage = null;
 
@@ -318,12 +332,16 @@ namespace SGSclient
 
         private void SGSClient_KeyDown(object sender, KeyEventArgs e)
         {
+            txtChatBox.Enabled = false;
+            comboBox1.Enabled = false;
+            lstChatters.Enabled = false;
             if (e.KeyCode == Keys.Up)
             {
                 if (players[0].position.Y >= 10)
                 {
                     players[0].position = new Point(players[0].position.X, players[0].position.Y - 5);
                     _isMove = true;
+                    butSendXY_Click(null, null);
                 }
                 else _isMove = false;
             }
@@ -334,6 +352,7 @@ namespace SGSclient
                     {
                         players[0].position = new Point(players[0].position.X, players[0].position.Y + 5);
                         _isMove = true;
+                        butSendXY_Click(null, null);
                     }
                     else _isMove = false;
                 }
@@ -344,6 +363,7 @@ namespace SGSclient
                         {
                             players[0].position = new Point(players[0].position.X - 5, players[0].position.Y);
                             _isMove = true;
+                            butSendXY_Click(null, null);
                         }
                         else _isMove = false;
                     }
@@ -354,13 +374,16 @@ namespace SGSclient
                             {
                                 players[0].position = new Point(players[0].position.X + 5, players[0].position.Y);
                                 _isMove = true;
+                                butSendXY_Click(null, null);
                             }
                             else _isMove = false;
                         }
+                       
             //Show_Dot();
 
             //Invalidate();
-            butSendXY_Click(null, null);
+            //System.Threading.Thread.Sleep(100);
+            //butSendXY_Click(null, null);
         }
 
 
@@ -374,6 +397,16 @@ namespace SGSclient
             Invalidate();*/
 
         }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (_isMove)
+            {
+                _isMove = false;
+                Invalidate();
+
+            }
+        }
     }
     
     //The data structure by which the server and the client interact with 
@@ -385,6 +418,9 @@ namespace SGSclient
         {
             this.cmdCommand = Command.Null;
            // this.strColor = (Color.DarkGray).ToString();
+            this.posX = 5;
+            this.posY = 5;
+            this.byteColor = 1;
             this.strMessage = null;
             this.strName = null;
             
@@ -393,33 +429,50 @@ namespace SGSclient
         //Converts the bytes into an object of type Data
         public Data(byte[] data)
         {
+            int msgLen=0;
             //The first four bytes are for the Command
             this.cmdCommand = (Command)BitConverter.ToInt32(data, 0);
 
             //The next four store the length of the name
             int nameLen = BitConverter.ToInt32(data, 4);
 
-            //The next four store the length of the message
-            int msgLen = BitConverter.ToInt32(data, 8);
-
-            //This check makes sure that strName has been passed in the array of bytes
-            if (nameLen > 0)
-                this.strName = Encoding.UTF8.GetString(data, 12, nameLen);
+            if (cmdCommand != Command.Draw)
+            {
+                //The next four store the length of the message
+                msgLen = BitConverter.ToInt32(data, 8);
+                //This check makes sure that strName has been passed in the array of bytes
+                if (nameLen > 0)
+                    this.strName = Encoding.UTF8.GetString(data, 12, nameLen);
+                else
+                    this.strName = null;
+            }
             else
-                this.strName = null;
+            {
+                this.posX = data[8];
+                this.posY = data[9];
+                this.byteColor = data[10];
 
-            //This checks for a null message field
-            if (msgLen > 0)
-                this.strMessage = Encoding.UTF8.GetString(data, 12 + nameLen, msgLen);
-            else
-                this.strMessage = null;
+                if (nameLen > 0)
+                    this.strName = Encoding.UTF8.GetString(data, 11, nameLen);
+                else
+                    this.strName = null;
+            }
 
-        //    this.strColor = (Color.Black).ToString();
+            if (cmdCommand != Command.Draw)
+            {
+                //This checks for a null message field
+                if (msgLen > 0)
+                    this.strMessage = Encoding.UTF8.GetString(data, 12 + nameLen, msgLen);
+                else
+                    this.strMessage = null;
+            }
+
         }
 
         //Converts the Data structure into an array of bytes
-        public byte[] ToByte()
+        public byte[] ToByte(bool _isDraw=false)
         {
+
             List<byte> result = new List<byte>();
 
             //First four are for the Command
@@ -431,25 +484,37 @@ namespace SGSclient
             else
                 result.AddRange(BitConverter.GetBytes(0));
 
-            //Length of the message
-            if (strMessage != null)
-                result.AddRange(BitConverter.GetBytes(strMessage.Length));
+            if (cmdCommand != Command.Draw)
+            {
+                //Length of the message
+                if (strMessage != null)
+                    result.AddRange(BitConverter.GetBytes(strMessage.Length));
+                else
+                    result.AddRange(BitConverter.GetBytes(0));
+            }
             else
-                result.AddRange(BitConverter.GetBytes(0));
-
+            {
+                result.Add(posX);
+                result.Add(posY);
+                result.Add(byteColor);
+            }
             //Add the name
-            if (strName != null)
-                result.AddRange(Encoding.UTF8.GetBytes(strName));
+            result.AddRange(Encoding.UTF8.GetBytes(strName));
 
-            //And, lastly we add the message text to our array of bytes
-            if (strMessage != null)
-                result.AddRange(Encoding.UTF8.GetBytes(strMessage));
-
+            if (cmdCommand != Command.Draw)
+            {
+                //And, lastly we add the message text to our array of bytes
+                if (strMessage != null)
+                    result.AddRange(Encoding.UTF8.GetBytes(strMessage));
+            }
             return result.ToArray();
         }
 
         public string strName;      //Name by which the client logs into the room
         public string strMessage;   //Message text
+        public byte posX;
+        public byte posY;
+        public byte byteColor;
        // public string strColor;
         public Command cmdCommand;  //Command type (login, logout, send message, etcetera)
     }

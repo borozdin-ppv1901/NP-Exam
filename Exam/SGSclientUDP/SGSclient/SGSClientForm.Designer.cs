@@ -28,12 +28,15 @@ namespace SGSclient
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.btnSend = new System.Windows.Forms.Button();
             this.txtChatBox = new System.Windows.Forms.TextBox();
             this.txtMessage = new System.Windows.Forms.TextBox();
             this.lstChatters = new System.Windows.Forms.ListBox();
             this.butSelectColor = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // btnSend
@@ -77,7 +80,7 @@ namespace SGSclient
             // 
             // butSelectColor
             // 
-            this.butSelectColor.Location = new System.Drawing.Point(390, 189);
+            this.butSelectColor.Location = new System.Drawing.Point(534, 198);
             this.butSelectColor.Name = "butSelectColor";
             this.butSelectColor.Size = new System.Drawing.Size(93, 23);
             this.butSelectColor.TabIndex = 8;
@@ -94,11 +97,31 @@ namespace SGSclient
             this.label1.TabIndex = 9;
             this.label1.Text = "label1";
             // 
+            // timer1
+            // 
+            this.timer1.Interval = 20;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // comboBox1
+            // 
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Items.AddRange(new object[] {
+            "Red",
+            "Green",
+            "Yellow",
+            "Blue",
+            "Magenta"});
+            this.comboBox1.Location = new System.Drawing.Point(380, 192);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(103, 21);
+            this.comboBox1.TabIndex = 10;
+            // 
             // SGSClient
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(617, 221);
+            this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.butSelectColor);
             this.Controls.Add(this.lstChatters);
@@ -126,6 +149,8 @@ namespace SGSclient
         private System.Windows.Forms.ListBox lstChatters;
         private System.Windows.Forms.Button butSelectColor;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.ComboBox comboBox1;
     }
 }
 
